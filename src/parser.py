@@ -1,5 +1,6 @@
 import os
 from tqdm import tqdm
+import pickle
 
 def concat_uint8(l):
     ret = 0
@@ -92,3 +93,6 @@ if __name__ == '__main__':
     print(data[1]["header"])
     print(data[2]["header"])
     print(data[-1]["header"])
+
+    with open('../data/parking-lot.bin', 'wb') as f:
+        pickle.dump(data, f)

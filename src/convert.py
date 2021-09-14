@@ -1,17 +1,17 @@
-import pickle
-import yaml
+import config
+from utils import *
 
-def calibrate_dist(packets, calibration, distance_resolution_m=0.002):
+def preprocess(packets, calibration, distance_resolution_m=0.002):
     npackets = len(packets)
     nblocks = len(packets[0]["data"]["blocks"])
     nlasers = len(packets[0]["data"]["blocks"][0]["lasers"])
 
-    mu = 15 # 100 フレームの平均
-    theta = 8 # 100 フレームの1シグマ区間に95%が含まれるような標準偏差
+    mu = config.mu # 100 フレームの平均
+    theta = config.theta # 100 フレームの1シグマ区間に95%が含まれるような標準偏差
 
-    img = [[packets[p]["data"]["blocks"][(2 * b) + (l // nlasers)]["lasers"][l % nlasers]["dist"] for b in range((nblocks // 2)) for p in range(npackets)] for l in range(nlasers * 2)]
-    for i in range(nlasers * 2):
-        for j in range(npackets * (nblocks // 2)):
+    img = [[packets[p]["data"]["blocks"][(b << 1) + (l // nlasers)]["lasers"][l % nlasers]["dist"] for b in range((nblocks >> 1)) for p in range(npackets)] for l in range(nlasers << 1)]
+    for i in range(nlasers << 1):
+        for j in range(npackets * (nblocks >> 1)):
             if img[i][j] == 0:
                 if j > 1:
                     img[i][j] = img[i][j-1]
@@ -26,7 +26,7 @@ def calibrate_dist(packets, calibration, distance_resolution_m=0.002):
 
 
 def raw2img(data, calibration):
-    return [calibrate_dist(d["packets"], calibration) for d in data]
+    return [preprocess(d["packets"], calibration) for d in data]
 
 
 if __name__ == '__main__':
@@ -36,17 +36,17 @@ if __name__ == '__main__':
     # data[][][][][][]["lasers"][number of lasers (=32)]["dist" / "intensity"]
     # data[][][]["data"]["stamp" / "type" / "value"]
 
-    with open('../data/parking-lot.bin', 'rb') as f:
-        data = pickle.load(f)
+    data_name = config.data_name[1]
+    data = load_pickle(data_name)
 
     # calibration["lasers"][number of lasers (=64)]["dist_correction" / "dist_correction_x" / "dist_correction_y"/
     #     "focal_distance" / "focal_slope" / "horiz_offset_correction" / "laser_id" / "min_intensity" /
     #     "rot_correction" / "vert_correction" / "vert_offset_correction"]
     # calibration["num_lasers"] = 64
 
-    with open('../data/64S2.yaml', 'r') as yml:
-        calibration = yaml.load(yml, Loader=yaml.SafeLoader)
+    calibration = load_yaml(config.yaml_name)
 
     img = raw2img(data, calibration)
 
     print(img[0])
+    print(len(img), len(img[0])) # 602, 64

@@ -1,6 +1,8 @@
 import os
 from tqdm import tqdm
-import pickle
+
+import config
+from utils import *
 
 def concat_uint8(l):
     ret = 0
@@ -33,8 +35,8 @@ def parseData(data):
     return ret
 
 
-def readFile(file_name, ext='.txt', path='../data', progress=False):
-    f = open(os.path.join(path, file_name+ext), 'r')
+def readFile(data_name, ext='.txt', path='../data', progress=False):
+    f = open(os.path.join(path, data_name+ext), 'r')
     data = f.readlines()
     f.close()
 
@@ -84,9 +86,8 @@ if __name__ == '__main__':
     # data[][][][][][]["lasers"][number of lasers (=32)]["dist" / "intensity"]
     # data[][][]["data"]["stamp" / "type" / "value"]
 
-    data = readFile('parking-lot', progress=True)
-    # data = readFile('urban-road', progress=True)
-    # data = readFile('residential-area', progress=True)
+    data_name = config.data_name[0]
+    data = readFile(data_name, progress=True)
     print(len(data)) # number of sequences: 602 (parking-lot), 600 (urban-road, residential-area)
     print(len(data[0]["packets"])) # number of packet data: 348
     print(data[0]["header"])
@@ -94,5 +95,4 @@ if __name__ == '__main__':
     print(data[2]["header"])
     print(data[-1]["header"])
 
-    with open('../data/parking-lot.bin', 'wb') as f:
-        pickle.dump(data, f)
+    save_pickle(data, data_name)

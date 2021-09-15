@@ -22,12 +22,14 @@ print = functools.partial(print, flush=True)
 parser = argparse.ArgumentParser(description='PyTorch LiDAR Point Cloud Compression Training')
 # --progress, -p: use progress bar when preparing dataset
 parser.add_argument('--progress', '-p', action='store_true', help='use progress bar')
+# --refresh, -r: refresh dataset files to update
+parser.add_argument('--refresh', '-r', action='store_true', help='refresh dataset files')
 # --summary, -s: show torchsummary to see the neural model structure
 parser.add_argument('--summary', '-s', action='store_true', help='show torchsummary')
 args = parser.parse_args()
 
 print('==> Preparing train/test data..')
-dataset = loadLiDARData(progress=args.progress)
+dataset = LiDARData(refresh=args.refresh, progress=args.progress)
 
 trainset = datasetsLiDAR(dataset)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=10, shuffle=True)
@@ -51,7 +53,8 @@ if args.summary:
 #     cudnn.benchmark = True
 
 criterion = torch.nn.L1Loss()
-optimizer = optim.Adam(model.parameters())
+optimizer = optim.Adam(model.parameters(), lr=0.01)
+# optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
 

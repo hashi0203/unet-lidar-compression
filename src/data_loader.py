@@ -16,8 +16,8 @@ class loadLiDARData():
 
         n = config.nbframe
         data = []
-        # for data_name in config.data_name:
-        for data_name in ['test']:
+        for data_name in config.data_name:
+        # for data_name in ['test']:
             if not(refresh) and file_exists(data_name):
                 tmp_data = load_pickle(data_name)
                 data += tmp_data[:(len(tmp_data) // (n+2)) * (n+2)]
@@ -88,11 +88,6 @@ if __name__ == '__main__':
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=10, shuffle=True, num_workers=2)
     testset = datasetsLiDAR(dataset, train=False)
     testloader = torch.utils.data.DataLoader(testset, batch_size=10, num_workers=2)
-    print("aaaaa")
-
-    tmp = testloader.__iter__()
-    x1, y1 = tmp.next()
-    print(x1)
 
     for inputs, targets in trainloader:
         pass

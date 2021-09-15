@@ -1,6 +1,6 @@
 import torch
 import torch.optim as optim
-import torch.backends.cudnn as cudnn
+# import torch.backends.cudnn as cudnn
 
 from torchsummary import summary
 
@@ -31,9 +31,11 @@ dataset = loadLiDARData(progress=args.progress)
 
 trainset = datasetsLiDAR(dataset)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=10, shuffle=True)
+# trainloader = torch.utils.data.DataLoader(trainset, batch_size=10, shuffle=True, num_workers=2)
 
 testset = datasetsLiDAR(dataset, train=False)
 testloader = torch.utils.data.DataLoader(testset, batch_size=10)
+# testloader = torch.utils.data.DataLoader(testset, batch_size=10, num_workers=2)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 

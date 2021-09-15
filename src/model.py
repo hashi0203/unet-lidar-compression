@@ -18,9 +18,9 @@ class UNet(nn.Module):
             f = self.filter_sizes[i]
             pad = f // 2
 
-            convs = [nn.Conv2d(ch1, ch2, (f, f), padding=pad)]
+            convs = [nn.Sequential(nn.Conv2d(ch1, ch2, (f, f), padding=pad), nn.BatchNorm2d(ch2))]
             if i != len(self.filter_sizes) - 1:
-                convs.append(nn.Conv2d(ch2, ch2, (f, f), padding=pad))
+                convs.append(nn.Sequential(nn.Conv2d(ch2, ch2, (f, f), padding=pad), nn.BatchNorm2d(ch2)))
 
             self.convs.append(nn.ModuleList(convs))
 

@@ -56,38 +56,39 @@ class LiDAR_UNet(nn.Module):
         self.unet_interpolation = UNet(8, 5)
 
     def forward(self, x0, t=0):
-        # (C, H, W): (2, 64, 602)
-        # x0: (N, 2, 64, 602)
+        # (C, H, W): (2, 64, 2088)
+        # x0: (N, 2, 64, 2088)
+        print(x0.shape)
 
         y0 = self.unet_computation(x0).permute(1, 0, 2, 3)
-        # y0: (4, N, 64, 602)
+        # y0: (4, N, 64, 2088)
 
         I = x0.permute(1, 0, 2, 3)
-        # I: (2, N, 64, 602)
+        # I: (2, N, 64, 2088)
         F_hat = torch.cat((-(1-t)*t*y0[2:] + t*t*y0[:2], (1-t)*(1-t)*y0[2:] - t*(1-t)*y0[:2]))
-        # F_hat: (4, N, 64, 602)
+        # F_hat: (4, N, 64, 2088)
         g_hat = self.warping(I, F_hat)
-        # g_hat: (2, N, 64, 602)
+        # g_hat: (2, N, 64, 2088)
         x1 = torch.stack((I[0], g_hat[0], F_hat[0], F_hat[1], F_hat[3], F_hat[2], g_hat[1], I[1])).permute(1, 0, 2, 3)
-        # x1: (N, 8, 64, 602)
+        # x1: (N, 8, 64, 2088)
 
         y1 = self.unet_interpolation(x1).permute(1, 0, 2, 3)
-        # y1: (5, N, 64, 602)
+        # y1: (5, N, 64, 2088)
 
         V = torch.stack((y1[0] * (1-t), (1 - y1[0]) * t))
-        # V: (2, N, 64, 602)
+        # V: (2, N, 64, 2088)
         Z = V[0] + V[1]
-        # Z: (N, 64, 602)
+        # Z: (N, 64, 2088)
         g = self.warping(I, F_hat + torch.cat((y1[3:], y1[1:3])))
-        # g: (2, N, 64, 602)
+        # g: (2, N, 64, 2088)
         B_hat = (V[0] * g[0] + V[1] * g[1]) / Z
-        # B_hat: (N, 64, 602)
+        # B_hat: (N, 64, 2088)
         return B_hat
 
-    def warping(self, I, F_hat): # (2, N, 64, 602)
+    def warping(self, I, F_hat): # (2, N, 64, 2088)
         return torch.cat((self.grid_sample(I[0], F_hat[:2]), self.grid_sample(I[1], F_hat[2:])))
 
-    def grid_sample(self, I, F_hat): # (1, N, 64, 602)
+    def grid_sample(self, I, F_hat): # (1, N, 64, 2088)
         return F.grid_sample(I.view(-1, 1, *I.shape[1:]), F_hat.permute(1, 2, 3, 0),
                 mode='bilinear', padding_mode='reflection', align_corners=True).permute(1, 0, 2, 3)
 
@@ -95,4 +96,4 @@ class LiDAR_UNet(nn.Module):
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model = LiDAR_UNet().to(device)
-    summary(model, (2, 64, 602))
+    summary(model, (2, 64, 2088))

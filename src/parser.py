@@ -80,19 +80,19 @@ def readFile(data_name, ext='.txt', path='../data', progress=False):
 
 
 if __name__ == '__main__':
-    # data[number of sequences]["header"]["seq" / "stamp" / "frame_id"]
-    # data[number of sequences]["packets"][number of packet data]["stamp" / "data"]
-    # data[][][]["data"]["blocks"][number of blocks (=12)]["id" / "pos" / "lasers"]
-    # data[][][][][][]["lasers"][number of lasers (=32)]["dist" / "intensity"]
-    # data[][][]["data"]["stamp" / "type" / "value"]
+    # raw_data[number of sequences]["header"]["seq" / "stamp" / "frame_id"]
+    # raw_data[number of sequences]["packets"][number of packet data]["stamp" / "data"]
+    # raw_data[][][]["data"]["blocks"][number of blocks (=12)]["id" / "pos" / "lasers"]
+    # raw_data[][][][][][]["lasers"][number of lasers (=32)]["dist" / "intensity"]
+    # raw_data[][][]["data"]["stamp" / "type" / "value"]
 
     data_name = config.data_name[0]
-    data = readFile(data_name, progress=True)
-    print(len(data)) # number of sequences: 602 (parking-lot), 600 (urban-road, residential-area)
-    print(len(data[0]["packets"])) # number of packet data: 348
-    print(data[0]["header"])
-    print(data[1]["header"])
-    print(data[2]["header"])
-    print(data[-1]["header"])
+    raw_data = readFile(data_name, progress=True)
+    print(len(raw_data)) # number of sequences: 602 (parking-lot), 600 (urban-road, residential-area)
+    print(len(raw_data[0]["packets"])) # number of packet data: 348
+    print(raw_data[0]["header"])
+    print(raw_data[1]["header"])
+    print(raw_data[2]["header"])
+    print(raw_data[-1]["header"])
 
-    save_pickle(data, data_name)
+    save_pickle(raw_data, data_name, 'raw')

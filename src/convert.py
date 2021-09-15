@@ -2,6 +2,7 @@ from tqdm import tqdm
 
 import config
 from utils import *
+from parser import readFile
 
 def preprocess(packets, calibration, distance_resolution_m=0.002):
     npackets = len(packets)
@@ -35,14 +36,18 @@ def raw2img(data, calibration, progress=False):
 
 
 if __name__ == '__main__':
-    # data[number of sequences]["header"]["seq" / "stamp" / "frame_id"]
-    # data[number of sequences]["packets"][number of packet data]["stamp" / "data"]
-    # data[][][]["data"]["blocks"][number of blocks (=12)]["id" / "pos" / "lasers"]
-    # data[][][][][][]["lasers"][number of lasers (=32)]["dist" / "intensity"]
-    # data[][][]["data"]["stamp" / "type" / "value"]
+    # raw_data[number of sequences]["header"]["seq" / "stamp" / "frame_id"]
+    # raw_data[number of sequences]["packets"][number of packet data]["stamp" / "data"]
+    # raw_data[][][]["data"]["blocks"][number of blocks (=12)]["id" / "pos" / "lasers"]
+    # raw_data[][][][][][]["lasers"][number of lasers (=32)]["dist" / "intensity"]
+    # raw_data[][][]["data"]["stamp" / "type" / "value"]
 
-    data_name = config.data_name[1]
-    data = load_pickle(data_name)
+    data_name = config.data_name[2]
+    if file_exists(data_name, 'raw'):
+        raw_data = load_pickle(data_name, 'raw')
+    else:
+        raw_data = readFile(data_name, progress=True)
+        save_pickle(raw_data, data_name, 'raw')
 
     # calibration["lasers"][number of lasers (=64)]["dist_correction" / "dist_correction_x" / "dist_correction_y"/
     #     "focal_distance" / "focal_slope" / "horiz_offset_correction" / "laser_id" / "min_intensity" /
@@ -51,7 +56,8 @@ if __name__ == '__main__':
 
     calibration = load_yaml(config.yaml_name)
 
-    img = raw2img(data, calibration, progress=True)
+    img_data = raw2img(raw_data, calibration, progress=True)
+    save_pickle(img_data, data_name, 'img')
 
     # print(img[0])
-    print(len(img), len(img[0])) # 602, 64
+    print(len(img_data), len(img_data[0])) # 602, 64

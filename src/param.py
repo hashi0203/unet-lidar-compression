@@ -36,19 +36,20 @@ def getParams(data, calibration):
     return mu, theta
 
 if __name__ == '__main__':
-    # data[number of sequences]["header"]["seq" / "stamp" / "frame_id"]
-    # data[number of sequences]["packets"][number of packet data]["stamp" / "data"]
-    # data[][][]["data"]["blocks"][number of blocks (=12)]["id" / "pos" / "lasers"]
-    # data[][][][][][]["lasers"][number of lasers (=32)]["dist" / "intensity"]
-    # data[][][]["data"]["stamp" / "type" / "value"]
+    # raw_data[number of sequences]["header"]["seq" / "stamp" / "frame_id"]
+    # raw_data[number of sequences]["packets"][number of packet data]["stamp" / "data"]
+    # raw_data[][][]["data"]["blocks"][number of blocks (=12)]["id" / "pos" / "lasers"]
+    # raw_data[][][][][][]["lasers"][number of lasers (=32)]["dist" / "intensity"]
+    # raw_data[][][]["data"]["stamp" / "type" / "value"]
 
     data = []
     for data_name in config.data_name:
-        if file_exists(data_name):
-            data += load_pickle(data_name)
+        if file_exists(data_name, 'raw'):
+            data += load_pickle(data_name, 'raw')
         else:
-            data += readFile(data_name, progress=True)
-            save_pickle(data, data_name)
+            raw_data = readFile(data_name, progress=True)
+            save_pickle(raw_data, data_name, 'raw')
+            data += raw_data
 
     print(len(data))
 

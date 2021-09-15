@@ -53,28 +53,41 @@ class LiDAR_UNet(nn.Module):
         super(LiDAR_UNet, self).__init__()
 
         self.unet_computation = UNet(2, 4)
-        self.unet_interpolation = UNet(6, 5)
+        self.unet_interpolation = UNet(8, 5)
 
-    def forward(self, x, t=0):
-        y = self.unet_computation(x).permute(1, 0, 2, 3)
+    def forward(self, x0, t=0):
+        # (C, H, W): (2, 64, 602)
+        # x0: (N, 2, 64, 602)
 
-        I = x.permute(1, 0, 2, 3)
-        F_hat = torch.cat((-(1-t)*t*y[2:] + t*t*y[:2], (1-t)*(1-t)*y[2:] - t*(1-t)*y[:2]))
+        y0 = self.unet_computation(x0).permute(1, 0, 2, 3)
+        # y0: (4, N, 64, 602)
+
+        I = x0.permute(1, 0, 2, 3)
+        # I: (2, N, 64, 602)
+        F_hat = torch.cat((-(1-t)*t*y0[2:] + t*t*y0[:2], (1-t)*(1-t)*y0[2:] - t*(1-t)*y0[:2]))
+        # F_hat: (4, N, 64, 602)
         g_hat = self.warping(I, F_hat)
-        y = torch.stack((I[0], F_hat[0], g_hat[0], g_hat[1], F_hat[1], I[1]))
+        # g_hat: (2, N, 64, 602)
+        x1 = torch.stack((I[0], g_hat[0], F_hat[0], F_hat[1], F_hat[3], F_hat[2], g_hat[1], I[1])).permute(1, 0, 2, 3)
+        # x1: (N, 8, 64, 602)
 
-        y = self.unet_interpolation(y.permute(1, 0, 2, 3)).permute(1, 0, 2, 3)
+        y1 = self.unet_interpolation(x1).permute(1, 0, 2, 3)
+        # y1: (5, N, 64, 602)
 
-        V = torch.stack((y[0] * (1-t), (1 - y[0]) * t))
+        V = torch.stack((y1[0] * (1-t), (1 - y1[0]) * t))
+        # V: (2, N, 64, 602)
         Z = V[0] + V[1]
-        g = self.warping(I, F_hat + torch.cat((y[3:], y[1:3])))
+        # Z: (N, 64, 602)
+        g = self.warping(I, F_hat + torch.cat((y1[3:], y1[1:3])))
+        # g: (2, N, 64, 602)
         B_hat = (V[0] * g[0] + V[1] * g[1]) / Z
+        # B_hat: (N, 64, 602)
         return B_hat
 
-    def warping(self, I, F_hat):
+    def warping(self, I, F_hat): # (2, N, 64, 602)
         return torch.cat((self.grid_sample(I[0], F_hat[:2]), self.grid_sample(I[1], F_hat[2:])))
 
-    def grid_sample(self, I, F_hat):
+    def grid_sample(self, I, F_hat): # (1, N, 64, 602)
         return F.grid_sample(I.view(-1, 1, *I.shape[1:]), F_hat.permute(1, 2, 3, 0),
                 mode='bilinear', padding_mode='reflection', align_corners=True).permute(1, 0, 2, 3)
 

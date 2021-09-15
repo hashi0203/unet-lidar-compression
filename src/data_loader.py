@@ -10,24 +10,39 @@ from convert import raw2img
 
 # torch.multiprocessing.set_sharing_strategy('file_system')
 
-class loadLiDARData():
+def loadLiDARData(data_names=config.data_name, refresh=False, progress=False):
+    if type(data_names) is str:
+        data_names = [data_names]
+
+    data = []
+    calibration = load_yaml(config.yaml_name)
+    for data_name in data_names:
+        if not(refresh) and file_exists(data_name, 'img'):
+            data.append(load_pickle(data_name, 'img'))
+        elif not(refresh) and file_exists(data_name, 'raw'):
+            raw_data = load_pickle(data_name, 'raw')
+            img_data = raw2img(raw_data, calibration, progress=progress)
+            save_pickle(img_data, data_name, 'img')
+            data.append(img_data)
+        else:
+            raw_data = readFile(data_name, progress=progress)
+            save_pickle(raw_data, data_name, 'raw')
+            img_data = raw2img(raw_data, calibration, progress=progress)
+            save_pickle(img_data, data_name, 'img')
+            data.append(img_data)
+
+    return data
+
+
+class LiDARData():
     def __init__(self, train_rate=0.8, refresh=False, progress=False):
         assert 0 < train_rate <= 1
 
         n = config.nbframe
         data = []
-        for data_name in config.data_name:
-        # for data_name in ['test']:
-            if not(refresh) and file_exists(data_name):
-                tmp_data = load_pickle(data_name)
-                data += tmp_data[:(len(tmp_data) // (n+2)) * (n+2)]
-            else:
-                tmp_data = readFile(data_name, progress=progress)
-                save_pickle(tmp_data, data_name)
-                data += tmp_data[:(len(tmp_data) // (n+2)) * (n+2)]
-
-        calibration = load_yaml(config.yaml_name)
-        data = raw2img(data, calibration, progress=progress)
+        # for img_data in loadLiDARData('test', progress=True, refresh=refresh, progress=progress):
+        for img_data in loadLiDARData(refresh=refresh, progress=progress):
+            data += img_data[:(len(img_data) // (n+2)) * (n+2)]
 
         data_num = len(data) // (n+2)
 
@@ -67,7 +82,7 @@ class loadLiDARData():
 
 
 class datasetsLiDAR(torch.utils.data.Dataset):
-    def __init__(self, dataset: loadLiDARData, train=True):
+    def __init__(self, dataset: LiDARData, train=True):
         self.data, self.target = map(np.array, dataset.getTrainset() if train else dataset.getTestset())
         self.data = self.data.transpose(0, 2, 3, 1)
         self.target = self.target.transpose(0, 2, 3, 1)
@@ -83,7 +98,7 @@ class datasetsLiDAR(torch.utils.data.Dataset):
 
 
 if __name__ == '__main__':
-    dataset = loadLiDARData(progress=True)
+    dataset = LiDARData(progress=True)
     trainset = datasetsLiDAR(dataset)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=10, shuffle=True, num_workers=2)
     testset = datasetsLiDAR(dataset, train=False)

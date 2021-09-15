@@ -3,3 +3,4 @@ data
 checkpoint
 graph
 .python-version
+*.out

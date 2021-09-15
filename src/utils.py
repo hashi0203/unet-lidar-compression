@@ -16,3 +16,6 @@ def load_yaml(yaml_name, ext='.yaml', path=config.data_path):
     with open(os.path.join(path, yaml_name+ext), 'r') as yml:
         calibration = yaml.load(yml, Loader=yaml.SafeLoader)
     return calibration
+
+def file_exists(data_name, ext='.bin', path=config.data_path):
+    return os.path.isfile(os.path.join(path, data_name+ext))

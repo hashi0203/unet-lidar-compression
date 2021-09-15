@@ -3,6 +3,7 @@ import itertools
 
 import config
 from utils import *
+from parser import readFile
 
 def calibrate_dist(packets, calibration, distance_resolution_m=0.002):
     nlasers = len(packets[0]["data"]["blocks"][0]["lasers"])
@@ -43,7 +44,11 @@ if __name__ == '__main__':
 
     data = []
     for data_name in config.data_name:
-        data += load_pickle(data_name)
+        if file_exists(data_name):
+            data += load_pickle(data_name)
+        else:
+            data += readFile(data_name, progress=True)
+            save_pickle(data, data_name)
 
     print(len(data))
 

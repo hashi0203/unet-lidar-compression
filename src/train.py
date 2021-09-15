@@ -57,6 +57,7 @@ optimizer = optim.Adam(model.parameters(), lr=0.01)
 # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
+n = config.nbframe
 
 def train():
     model.train()
@@ -69,7 +70,7 @@ def train():
         # inputs : (N,       2, 64, 2088)
         # targets: (N, nbframe, 64, 2088)
 
-        outputs = torch.stack(tuple([model(inputs, t) for t in (np.arange(config.nbframe) + 1) / (config.nbframe + 1)])).permute(1, 0, 2, 3)
+        outputs = torch.stack(tuple([model(inputs, t) for t in (np.arange(n) + 1) / (n + 1)])).permute(1, 0, 2, 3)
         # outputs: (N, nbframe, 64, 2088)
 
         loss = criterion(outputs, targets)
@@ -87,7 +88,7 @@ def test():
     with torch.no_grad():
         for inputs, targets in testloader:
             inputs, targets = inputs.to(device, dtype=torch.float), targets.to(device, dtype=torch.float)
-            outputs = torch.stack(tuple([model(inputs, t) for t in (np.arange(config.nbframe) + 1) / (config.nbframe + 1)])).permute(1, 0, 2, 3)
+            outputs = torch.stack(tuple([model(inputs, t) for t in (np.arange(n) + 1) / (n + 1)])).permute(1, 0, 2, 3)
 
             loss = criterion(outputs, targets)
             test_loss += loss.item()
@@ -95,6 +96,7 @@ def test():
     return test_loss / len(testloader)
 
 
+print('==> Start training..')
 t = datetime.datetime.now().strftime('%m%d-%H%M')
 if not os.path.isdir(config.CKPT_PATH):
     os.mkdir(config.CKPT_PATH)
@@ -121,6 +123,7 @@ for epoch in epochs:
 
     scheduler.step()
 
+print('==> Making loss graph..')
 if not os.path.isdir(config.GRAPH_PATH):
     os.mkdir(config.GRAPH_PATH)
 GRAPH_FILE = os.path.join(config.GRAPH_PATH, 'loss-%s.png' % t)
@@ -144,3 +147,5 @@ plt.grid()
 plt.legend()
 plt.title('loss')
 plt.savefig(GRAPH_FILE)
+
+print('==> Finish.')

@@ -1,3 +1,5 @@
+from tqdm import tqdm
+
 import config
 from utils import *
 
@@ -25,7 +27,10 @@ def preprocess(packets, calibration, distance_resolution_m=0.002):
     return img
 
 
-def raw2img(data, calibration):
+def raw2img(data, calibration, progress=False):
+    if progress:
+        data = tqdm(data)
+        data.set_description("Converting data into 2D image")
     return [preprocess(d["packets"], calibration) for d in data]
 
 
@@ -46,7 +51,7 @@ if __name__ == '__main__':
 
     calibration = load_yaml(config.yaml_name)
 
-    img = raw2img(data, calibration)
+    img = raw2img(data, calibration, progress=True)
 
-    print(img[0])
+    # print(img[0])
     print(len(img), len(img[0])) # 602, 64

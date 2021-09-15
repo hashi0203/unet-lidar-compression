@@ -58,7 +58,6 @@ class LiDAR_UNet(nn.Module):
     def forward(self, x0, t=0):
         # (C, H, W): (2, 64, 2088)
         # x0: (N, 2, 64, 2088)
-        print(x0.shape)
 
         y0 = self.unet_computation(x0).permute(1, 0, 2, 3)
         # y0: (4, N, 64, 2088)

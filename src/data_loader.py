@@ -6,30 +6,55 @@ import numpy as np
 import config
 from utils import *
 from parser import readFile
-from convert import raw2img
-
+from convert import raw2img, raw2calibrated
 # torch.multiprocessing.set_sharing_strategy('file_system')
 
-def loadLiDARData(data_names=config.data_name, refresh=False, progress=False):
+def loadLiDARData(data_names=config.data_name, train=True, refresh=False, progress=False):
     if type(data_names) is str:
         data_names = [data_names]
 
     data = []
     calibration = load_yaml(config.yaml_name)
+    raw_datas = []
     for data_name in data_names:
         if not(refresh) and file_exists(data_name, 'img'):
+            raw_datas.append(None)
             data.append(load_pickle(data_name, 'img'))
         elif not(refresh) and file_exists(data_name, 'raw'):
             raw_data = load_pickle(data_name, 'raw')
+            raw_datas.append(raw_data)
             img_data = raw2img(raw_data, calibration, progress=progress)
             save_pickle(img_data, data_name, 'img')
             data.append(img_data)
         else:
             raw_data = readFile(data_name, progress=progress)
+            raw_datas.append(raw_data)
             save_pickle(raw_data, data_name, 'raw')
             img_data = raw2img(raw_data, calibration, progress=progress)
             save_pickle(img_data, data_name, 'img')
             data.append(img_data)
+
+    if not(train):
+        calibrated = []
+        for i, data_name in enumerate(data_names):
+            if not(refresh) and file_exists(data_name, 'calibrated'):
+                calibrated.append(load_pickle(data_name, 'calibrated'))
+            elif raw_datas[i] is not None:
+                calibrated_data = raw2calibrated(raw_datas[i], calibration, progress=progress)
+                save_pickle(calibrated_data, data_name, 'calibrated')
+                calibrated.append(calibrated_data)
+            elif not(refresh) and file_exists(data_name, 'raw'):
+                raw_data = load_pickle(data_name, 'raw')
+                calibrated_data = raw2calibrated(raw_data, calibration, progress=progress)
+                save_pickle(calibrated_data, data_name, 'calibrated')
+                calibrated.append(calibrated_data)
+            else:
+                raw_data = readFile(data_name, progress=progress)
+                save_pickle(raw_data, data_name, 'raw')
+                calibrated_data = raw2calibrated(raw_data, calibration, progress=progress)
+                save_pickle(calibrated_data, data_name, 'calibrated')
+                calibrated.append(calibrated_data)
+        data = data, calibrated
 
     return data
 
@@ -39,12 +64,15 @@ class LiDARData():
         assert 0 < train_rate <= 1
 
         n = config.nbframe
-        data = []
-        # for img_data in loadLiDARData('test', progress=True, refresh=refresh, progress=progress):
-        for img_data in loadLiDARData(refresh=refresh, progress=progress):
-            data += img_data[:(len(img_data) // (n+2)) * (n+2)]
+        img_data = []
+        calibrated_data = []
+        for img, calibrated in zip(*loadLiDARData(train=False, refresh=refresh, progress=progress)):
+            img_data += img[:(len(img) // (n+2)) * (n+2)]
+            calibrated_data += calibrated[:(len(calibrated) // (n+2)) * (n+2)]
 
-        data_num = len(data) // (n+2)
+        assert len(img_data) == len(calibrated_data)
+
+        data_num = len(img_data) // (n+2)
 
         self.train_num = int(data_num * train_rate)
         self.test_num = data_num - self.train_num
@@ -59,14 +87,14 @@ class LiDARData():
         self.test_target = []
 
         j = 0
-        for i in range(0, len(data), n+2):
+        for i in range(0, len(img_data), n+2):
             if j < self.test_num and test_indexes[j] == i:
                 j += 1
-                self.test_data.append([data[i], data[i+n+1]])
-                self.test_target.append(data[i+1:i+n+1])
+                self.test_data.append([img_data[i], img_data[i+n+1]])
+                self.test_target.append(calibrated_data[i+1:i+n+1])
             else:
-                self.train_data.append([data[i], data[i+n+1]])
-                self.train_target.append(data[i+1:i+n+1])
+                self.train_data.append([img_data[i], img_data[i+n+1]])
+                self.train_target.append(calibrated_data[i+1:i+n+1])
 
     def getTrainset(self):
         return self.train_data, self.train_target

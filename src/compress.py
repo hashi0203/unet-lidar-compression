@@ -23,7 +23,7 @@ parser.add_argument('--progress', '-p', action='store_true', help='use progress 
 args = parser.parse_args()
 
 print('==> Preparing data..')
-data = loadLiDARData(refresh=args.refresh, progress=args.progress)
+img_data, calibrated_data = loadLiDARData(train=False, refresh=args.refresh, progress=args.progress)
 # 0 埋めしていないデータを読み出す
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -42,12 +42,12 @@ HIST_NAME = os.path.join(config.GRAPH_PATH, 'hist-' + config.CKPT_FILE[-13:-4])
 
 n = config.nbframe
 with torch.no_grad():
-    for i, d in enumerate(data):
-        d = np.array(d[:((len(d) - 1) // (n+1)) * (n+1) + 1])
-        frames = d[:-1].reshape(-1, n+1, *d.shape[1:])
-        I_frames = np.append(frames[:, 0], [d[-1]], axis=0)
+    for i, (img, calibrated) in enumerate(zip(img_data, calibrated_data)):
+        I_frames = np.array(img[:((len(img) - 1) // (n+1)) * (n+1) + 1])[::n+1]
         inputs = torch.tensor(list(zip(I_frames[:-1], I_frames[1:])))
-        targets = torch.tensor(frames[:, 1:])
+
+        calibrated = np.array(calibrated[:((len(calibrated) - 1) // (n+1)) * (n+1)])
+        targets = torch.tensor((calibrated.reshape(-1, n+1, *calibrated.shape[1:]))[:, 1:])
 
         # (C, H, W): (2, 64, 2088)
         inputs, targets = inputs.to(device, dtype=torch.float), targets.to(device, dtype=torch.float)

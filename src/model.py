@@ -15,6 +15,8 @@ class UNet(nn.Module):
         for i in range(len(self.filter_sizes)):
             ch1 = self.channel_sizes[i]
             ch2 = self.channel_sizes[i+1]
+            if len(self.filter_sizes) // 2 <= i < len(self.filter_sizes) - 1:
+                ch1 += self.channel_sizes[len(self.filter_sizes) - i - 1]
             f = self.filter_sizes[i]
             pad = f // 2
 
@@ -31,8 +33,8 @@ class UNet(nn.Module):
         y = x
         for i in range(len(self.filter_sizes) // 2):
             if i != 0: y = F.avg_pool2d(y, (2, 2))
-            y = F.leaky_relu(self.convs[i][0](y), self.alpha)
-            y = F.leaky_relu(self.convs[i][1](y), self.alpha)
+            y = F.relu(self.convs[i][0](y), self.alpha)
+            y = F.relu(self.convs[i][1](y), self.alpha)
             shortcuts.append(y)
 
         shortcuts = shortcuts[:-1]
@@ -40,11 +42,11 @@ class UNet(nn.Module):
         for i in range(len(self.filter_sizes) // 2 - 1):
             l = i + len(self.filter_sizes) // 2
             y = F.interpolate(y, size=shortcuts[-i-1].shape[-2:], mode='bilinear', align_corners=True)
-            y = F.leaky_relu(self.convs[l][0](y), self.alpha)
-            y = F.leaky_relu(self.convs[l][1](y), self.alpha)
-            y += shortcuts[-i-1]
+            y = torch.cat([shortcuts[-i-1], y], dim=1)
+            y = F.relu(self.convs[l][0](y), self.alpha)
+            y = F.relu(self.convs[l][1](y), self.alpha)
 
-        y = F.leaky_relu(self.convs[-1][0](y), self.alpha)
+        y = F.relu(self.convs[-1][0](y), self.alpha)
 
         return y
 

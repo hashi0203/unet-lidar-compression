@@ -32,12 +32,12 @@ print('==> Preparing train/test data..')
 dataset = LiDARData(refresh=args.refresh, progress=args.progress)
 
 trainset = datasetsLiDAR(dataset)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=10, shuffle=True)
-# trainloader = torch.utils.data.DataLoader(trainset, batch_size=10, shuffle=True, num_workers=2)
+# trainloader = torch.utils.data.DataLoader(trainset, batch_size=10, shuffle=True)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=10, shuffle=True, num_workers=2)
 
 testset = datasetsLiDAR(dataset, train=False)
-testloader = torch.utils.data.DataLoader(testset, batch_size=10)
-# testloader = torch.utils.data.DataLoader(testset, batch_size=10, num_workers=2)
+# testloader = torch.utils.data.DataLoader(testset, batch_size=10)
+testloader = torch.utils.data.DataLoader(testset, batch_size=10, num_workers=2)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -52,9 +52,11 @@ if args.summary:
 #     model = torch.nn.DataParallel(model)
 #     cudnn.benchmark = True
 
+# criterion = torch.nn.MSELoss()
 criterion = torch.nn.L1Loss()
-optimizer = optim.Adam(model.parameters(), lr=0.01)
-# optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
+optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=5e-4)
+# # optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
+# optimizer = optim.RMSprop(model.parameters(), lr=0.0001, weight_decay=1e-8, momentum=0.9)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
 n = config.nbframe

@@ -58,9 +58,11 @@ with torch.no_grad():
         # outputs: (N, nbframe, 64, 2088)
 
         plt.figure()
-        plt.hist([inputs.cpu().reshape(-1), (targets - outputs).cpu().reshape(-1)], label=['input', 'residual'], stacked=False, range=(-5, 5))
+        plt.hist([inputs.cpu().reshape(-1), targets.cpu().reshape(-1), outputs.cpu().reshape(-1), (targets - outputs).cpu().reshape(-1)], label=['input', 'target', 'output', 'residual'], stacked=False, range=(-5, 5), density=True)
         plt.legend()
         plt.savefig(HIST_NAME + '-%d.png' % i)
-        print(torch.mean(torch.abs(inputs)), torch.mean(torch.abs(targets - outputs)))
+
+        print('%d. mean: (input, residual) = (%.3f, %.3f)'
+            % (i, torch.mean(torch.abs(inputs)).item(), torch.mean(torch.abs(targets - outputs)).item()))
 
 print('==> Finish.')

@@ -1,5 +1,7 @@
 import random
 import itertools
+import numpy as np
+import datetime
 
 import config
 from utils import *
@@ -17,21 +19,20 @@ def calibrate_dist(packets, calibration, distance_resolution_m=0.002):
 
     return vals
 
+import matplotlib.pyplot as plt
 
 def getParams(data, calibration):
     vals = list(itertools.chain.from_iterable([calibrate_dist(d["packets"], calibration) for d in random.sample(data, 100)]))
-    vals.sort()
-    mu = sum(vals) / len(vals)
+    mu = np.mean(vals)
+    theta = np.std(vals)
 
-    head = 0
-    tail = len(vals) - 1
-    for _ in range(int(len(vals) / 20)):
-        if mu - vals[head] >= vals[tail] - mu:
-            head += 1
-        else:
-            tail -= 1
-
-    theta = min(mu - vals[head], vals[tail] - mu)
+    t = datetime.datetime.now().strftime('%m%d-%H%M')
+    if not os.path.isdir(config.GRAPH_PATH):
+        os.mkdir(config.GRAPH_PATH)
+    PARAM_FILE = os.path.join(config.GRAPH_PATH, 'param-%s.png' % t)
+    plt.figure()
+    plt.hist(vals, bins=50, range=(0,50))
+    plt.savefig(PARAM_FILE)
 
     return mu, theta
 

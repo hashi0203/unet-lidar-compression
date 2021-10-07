@@ -20,7 +20,7 @@ import functools
 print = functools.partial(print, flush=True)
 
 parser = argparse.ArgumentParser(description='PyTorch LiDAR Point Cloud Compression Training')
-# --progress, -p: use progress bar when preparing dataset
+# --progress, -p: show progress bar when preparing dataset
 parser.add_argument('--progress', '-p', action='store_true', help='show progress bar')
 # --refresh, -r: refresh dataset files to update
 parser.add_argument('--refresh', '-r', action='store_true', help='refresh dataset files')

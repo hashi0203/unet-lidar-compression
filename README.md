@@ -1,9 +1,7 @@
 # U-Net LiDAR Compression
 
-This application is to train and evaluate U-Net for LiDAR point cloud compression.
-
-This application takes LiDAR point cloud packet data as input and return compression rates.
-
+This application is to train and evaluate U-Net for LiDAR point cloud compression. <br>
+This application takes LiDAR point cloud packet data as input and return compression rates. <br>
 This program is based on "[Real-Time Streaming Point Cloud Compression for 3D LiDAR Sensor Using U-Net" by Chenxi Tu, Eijiro Takeuchi, Alexander Carballo, and Kazuya Takeda (IEEE Access 2019)](https://ieeexplore.ieee.org/document/8798629), and implemented by using `PyTorch`.
 
 ## Environment
@@ -39,8 +37,7 @@ $ pip install -r requirements.txt
 
 3. Download dataset
 
-    We used the [dataset published in the original paper](https://drive.google.com/drive/u/0/folders/1qUG_kEqfoT3oCOIMHI0FOktY8Nk9hC3b).
-
+    We used the [dataset published in the original paper](https://drive.google.com/drive/u/0/folders/1qUG_kEqfoT3oCOIMHI0FOktY8Nk9hC3b). <br>
     However, `.bag` files are not easy for us to use, so we convert them to `.txt` files.
 
     You can download the zip file from [this link (877 M)](https://projects.n-hassy.info/storage/unet-lidar-compression/data.zip).
@@ -71,8 +68,7 @@ $ pip install -r requirements.txt
 
 5. Edit settings in `src/config.py` (if necessary)
 
-    The variables `mu` and `theta` are mean and standard deviation of 100 frames randomly sampled from dataset.
-
+    The variables `mu` and `theta` are mean and standard deviation of 100 frames randomly sampled from dataset. <br>
     To get these values, run the following commands.
 
     ```bash
@@ -89,9 +85,9 @@ $ python3 train.py
 
 ### Options
 
--- `--progress`, `-p`: show progress bar when preparing dataset
--- `--refresh`, `-r`: refresh dataset files to update (if not set, the saved intermediate outputs are reused to save time)
--- `--summary`, `-s`: show `torchsummary` to see the neural net structure
+- `--progress`, `-p`: show progress bar when preparing dataset
+- `--refresh`, `-r`: refresh dataset files to update (if not set, the saved intermediate outputs are reused to save time)
+- `--summary`, `-s`: show `torchsummary` to see the neural net structure
 
 ## Compression
 

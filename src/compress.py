@@ -80,18 +80,22 @@ with torch.no_grad():
 
         plt.figure()
         plt.hist([inputs.cpu().reshape(-1)], bins=50, range=(-3, 7), density=True)
+        plt.title('input')
         plt.savefig(HIST_NAME + '-input-%d.png' % i)
 
         plt.figure()
         plt.hist([targets.cpu().reshape(-1)], bins=50, range=(-3, 7), density=True)
+        plt.title('target')
         plt.savefig(HIST_NAME + '-target-%d.png' % i)
 
         plt.figure()
         plt.hist([outputs.cpu().reshape(-1)], bins=50, range=(-3, 7), density=True)
+        plt.title('output')
         plt.savefig(HIST_NAME + '-output-%d.png' % i)
 
         plt.figure()
         plt.hist([(targets - outputs).cpu().reshape(-1)], bins=50, range=(-3, 7), density=True)
+        plt.title('residual')
         plt.savefig(HIST_NAME + '-residual-%d.png' % i)
 
         for I in I_frames:

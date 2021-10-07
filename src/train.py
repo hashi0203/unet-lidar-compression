@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser(description='PyTorch LiDAR Point Cloud Compress
 parser.add_argument('--progress', '-p', action='store_true', help='show progress bar')
 # --refresh, -r: refresh dataset files to update
 parser.add_argument('--refresh', '-r', action='store_true', help='refresh dataset files')
-# --summary, -s: show torchsummary to see the neural model structure
+# --summary, -s: show torchsummary to see the neural net structure
 parser.add_argument('--summary', '-s', action='store_true', help='show torchsummary')
 args = parser.parse_args()
 

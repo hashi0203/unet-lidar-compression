@@ -52,7 +52,7 @@ if __name__ == '__main__':
             save_pickle(raw_data, data_name, 'raw')
             data += raw_data
 
-    print(len(data))
+    print('number of data: %d' % len(data))
 
     # calibration["lasers"][number of lasers (=64)]["dist_correction" / "dist_correction_x" / "dist_correction_y"/
     #     "focal_distance" / "focal_slope" / "horiz_offset_correction" / "laser_id" / "min_intensity" /
@@ -61,4 +61,4 @@ if __name__ == '__main__':
 
     calibration = load_yaml(config.yaml_name)
 
-    print(getParams(data, calibration))
+    print('(mu, theta): (%f, %f)' % getParams(data, calibration))
